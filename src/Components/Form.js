@@ -1,9 +1,21 @@
-import React,{useState,useRef,useEffect} from 'react';
+import React,{useRef,useEffect} from 'react';
 import './css/Form.css';
+import {useSelector, useDispatch} from 'react-redux';
+import {reset,updateNumber,updateEipireYear,updateExpireMonth,updateCardNumber,updateHolderName,updateCardCvv} from '../redux/Actions';
+
 import {CreditCard} from './index';
 import {db} from '../firebase';
 
+
 export const Form = () => {
+
+  const cardNumber = useSelector(state=>state.cardNumber);
+  const holderName = useSelector(state=>state.holderName);
+  const cvv = useSelector(state=>state.cvv);
+  const expireMonth = useSelector(state=>state.expireMonth);
+  const expireYear = useSelector(state=>state.expireYear);
+  const number = useSelector(state=>state.number);
+  const dispatch = useDispatch();
   //set UseRefs
   const faceFront = useRef(null);
   const faceBack = useRef(null);
@@ -16,32 +28,21 @@ export const Form = () => {
   const holderNamePatt = /^[A-Za-z\s]{4,20}$/;
   const cardcvvPatt = /\d{3}/;
 
-  //set default cardInfo
-  const [cardInfo,setCardInfo] = useState({
-    cardNumber:'0123 4567 8901 2345',
-    number:'',
-    holderName:'',
-    expireMonth:'',
-    expireYear:'',
-    cvv:''
-  });
-
   //validate cardInfo when it changed
   useEffect(()=>{
-    if(cardInfo.number)
+    if(number)
     {
-      validateInput(cardnumberPatt,cardNumberRef,cardInfo.number);
+      validateInput(cardnumberPatt,cardNumberRef,number);
     }
-    if(cardInfo.holderName)
+    if(holderName)
     {
-      validateInput(holderNamePatt,holderNameRef,cardInfo.holderName);
+      validateInput(holderNamePatt,holderNameRef,holderName);
     }
-    if(cardInfo.cvv)
+    if(cvv)
     {
-      validateInput(cardcvvPatt,cvvRef,cardInfo.cvv);
+      validateInput(cardcvvPatt,cvvRef,cvv);
     }
-  },[cardInfo.number,cardInfo.holderName,cardInfo.cvv,holderNamePatt,cardnumberPatt,cardcvvPatt])
-
+  },[number,holderName,cvv,holderNamePatt,cardnumberPatt,cardcvvPatt])
 
   //validateInput function using pattern
   const validateInput = (pattern,ref,input) =>{
@@ -64,10 +65,10 @@ export const Form = () => {
   const handleSubmit = e=>{
     e.preventDefault();
 
-    let ccvValid = validateInput(cardcvvPatt,cvvRef,cardInfo.cvv);
-    let holderNameValid = validateInput(holderNamePatt,holderNameRef,cardInfo.holderName);
+    let ccvValid = validateInput(cardcvvPatt,cvvRef,cvv);
+    let holderNameValid = validateInput(holderNamePatt,holderNameRef,holderName);
 
-    let cardNumberValid = validateInput(cardnumberPatt,cardNumberRef,cardInfo.number);
+    let cardNumberValid = validateInput(cardnumberPatt,cardNumberRef,number);
 
     if(!ccvValid)
     {
@@ -92,7 +93,8 @@ export const Form = () => {
     //if all valid add cardInfo to firestore
     if(ccvValid && cardNumberValid && holderNameValid)
     {
-      db.collection('cardInfo').add(cardInfo);
+      db.collection('cardInfo').add({holderName,number,cvv,expireMonth,expireYear,cardNumber});
+      dispatch(reset());
     }
   }
 
@@ -110,7 +112,6 @@ export const Form = () => {
 
   //handle cardNumber input
   const inputCardNumber = e=>{
-
     //set the style in case uses delete all the input
     if(!e.target.value) {
       cardNumberRef.current.style ='';
@@ -122,7 +123,8 @@ export const Form = () => {
     //set cardNumber to show on Credit Card with space after every 4 digits
     let cardNumber = value.replace(/(\s)/g,'').replace(/(\d{4})/g,'$1 ').replace(/\s*$/,'')
     //save number and cardNumber to cardInfo
-    setCardInfo({...cardInfo,number:value,cardNumber:cardNumber});
+    dispatch(updateNumber(value));
+    dispatch(updateCardNumber(cardNumber));
   }
 
   //handle holderName input
@@ -131,10 +133,12 @@ export const Form = () => {
     if(!e.target.value) {
       holderNameRef.current.style ='';
     };
+
     //can only accept the alphabets and space
     let value = e.target.value.replace(/[^a-zA-Z\s]/,'');
+    console.log(e.target.value);
     //save holderName to cardInfo
-    setCardInfo({...cardInfo,holderName:value});
+    dispatch(updateHolderName(value));
   }
 
   //handle cvv input
@@ -147,19 +151,19 @@ export const Form = () => {
     //only accept digits
     let value = e.target.value.replace(/[^\d]/,'');
     //save cvv to cardInfo
-    setCardInfo({...cardInfo,cvv:value});
+    dispatch(updateCardCvv(value));
   }
 
   //handle expireMonth
   const inputExpireMonth =e =>{
     e.preventDefault();
-    setCardInfo({...cardInfo,expireMonth:e.target.value});
+    dispatch(updateExpireMonth(e.target.value));
   }
 
   //handle expireYear
   const inputExpireYear= e=>{
     e.preventDefault();
-    setCardInfo({...cardInfo,expireYear:e.target.value});
+    dispatch(updateEipireYear(e.target.value));
   }
 
 
@@ -169,11 +173,11 @@ export const Form = () => {
         use CreditCard components with all props
         */}
       <CreditCard
-        cardNumber= {cardInfo.cardNumber}
-        holderName = {cardInfo.holderName}
-        expireMonth ={cardInfo.expireMonth}
-        expireYear ={cardInfo.expireYear}
-        cvv = {cardInfo.cvv}
+        cardNumber= {cardNumber}
+        holderName={holderName}
+        cvv ={cvv}
+        expireMonth ={expireMonth}
+        expireYear ={expireYear}
         faceFront = {faceFront}
         faceBack ={faceBack}
         />
@@ -182,13 +186,13 @@ export const Form = () => {
       {/* cardNumber input div*/}
       <div className="card_number">
         <label htmlFor="cardnumber">Card Number</label>
-        <input ref={cardNumberRef} id='cardnumber' name="username" type="text" pattern={cardnumberPatt} title='16 digital numbers' maxLength={16} onChange ={e=>inputCardNumber(e)} value={cardInfo.number}  required/>
+        <input ref={cardNumberRef} id='cardnumber' name="username" type="text" pattern={cardnumberPatt} title='16 digital numbers' maxLength={16} onChange ={e=>inputCardNumber(e)} value={number}  required/>
       </div>
 
       {/*holderName input div*/}
       <div className="card_holder">
         <label htmlFor="holdername">Holder Name</label>
-        <input type="text" ref={holderNameRef} id='holdername' pattern={holderNamePatt} title='4-20 characters' maxLength={20} onChange={e=>inputHolderName(e)} value={cardInfo.holderName} required />
+        <input type="text" ref={holderNameRef} id='holdername' pattern={holderNamePatt} title='4-20 characters' maxLength={20} onChange={inputHolderName} value={holderName} required />
       </div>
 
       {/* cardCvv input div */}
@@ -196,7 +200,7 @@ export const Form = () => {
         <div className="card_expiredate">
           <label htmlFor="expiredate">Expiration Date</label>
           <div id='expiredate'>
-            <select name="months" id="months" value={cardInfo.expireMonth} onChange={e=>inputExpireMonth(e)} required>
+            <select name="months" id="months" value={expireMonth} onChange={e=>inputExpireMonth(e)} required>
               <option value='s'>Month</option>
               <option value="01">01</option>
               <option value="02">02</option>
@@ -211,7 +215,7 @@ export const Form = () => {
               <option value="11">11</option>
               <option value="12">12</option>
             </select>
-            <select name="years" id="years" value ={cardInfo.expireYear}  onChange ={e=>inputExpireYear(e)}  required>
+            <select name="years" id="years" value ={expireYear}  onChange ={e=>inputExpireYear(e)}  required>
               <option value="">Year</option>
               <option value="2021">2021</option>
               <option value="2022">2022</option>
@@ -229,7 +233,7 @@ export const Form = () => {
         {/*card cvv input div*/}
         <div className="card_cvv">
           <label htmlFor="cvv">CVV</label>
-          <input type="text" id='cvv' ref={cvvRef} pattern={cardcvvPatt} title='3 characters' value={cardInfo.cvv} maxLength={3} onChange={e=>inputCvv(e)} onFocus={turnToBack} onBlur={turnToFront} required/>
+          <input type="text" id='cvv' ref={cvvRef} pattern={cardcvvPatt} title='3 characters' value={cvv} maxLength={3} onChange={e=>inputCvv(e)} onFocus={turnToBack} onBlur={turnToFront} required/>
         </div>
       </div>
       {/* submit button */}
