@@ -95,6 +95,9 @@ export const Form = () => {
     {
       db.collection('cardInfo').add({holderName,number,cvv,expireMonth,expireYear,cardNumber});
       dispatch(reset());
+      cardNumberRef.current.style ='';
+      holderNameRef.current.style ='';
+      cvvRef.current.style ='';
     }
   }
 
