@@ -36,7 +36,7 @@
 /* .creditcard:hover .face.back{
   transform: rotateY(360deg);
 } */
-.creditcard .face.front::before{
+/* .creditcard .face.front::before{
   content: "";
   position: absolute;
   bottom: 40px;
@@ -46,9 +46,23 @@
   background:#f79e1b;
   border-radius: 50%;
   opacity: 0.5;
+} */
+
+.card_issuer{
+
+  height:60px;
+  width: 100px;
+  position: absolute;
+  right:40px;
+  bottom:40px;
 }
 
-.creditcard .face.front::after{
+.card_issuer img{
+  height: 100%;
+  width: 100%;
+}
+
+/* .creditcard .face.front::after{
   content: "";
   position: absolute;
   bottom: 40px;
@@ -58,7 +72,7 @@
   background: #eb001b;
   border-radius: 50%;
   opacity: 0.5;
-}
+} */
 
 .creditcard .face.front .debit{
   position: absolute;

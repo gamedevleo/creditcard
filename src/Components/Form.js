@@ -1,4 +1,4 @@
-import React,{useRef,useEffect} from 'react';
+import React,{useRef,useEffect,useState} from 'react';
 import './css/Form.css';
 import {useSelector, useDispatch} from 'react-redux';
 import {reset,updateNumber,updateEipireYear,updateExpireMonth,updateCardNumber,updateHolderName,updateCardCvv} from '../redux/Actions';
@@ -6,9 +6,11 @@ import {reset,updateNumber,updateEipireYear,updateExpireMonth,updateCardNumber,u
 import {CreditCard} from './index';
 import {db} from '../firebase';
 
+import creditCardType from '../CreditCardType';
 
 export const Form = () => {
 
+  const [cardType,setCardType] =useState('');
   const cardNumber = useSelector(state=>state.cardNumber);
   const holderName = useSelector(state=>state.holderName);
   const cvv = useSelector(state=>state.cvv);
@@ -32,7 +34,16 @@ export const Form = () => {
   useEffect(()=>{
     if(number)
     {
-      validateInput(cardnumberPatt,cardNumberRef,number);
+      let card = creditCardType(number);
+      setCardType(card);
+      if(card){
+        cardNumberRef.current.style.border = '1px solid green';
+        cardNumberRef.current.style.outline = '1px solid green';
+      }
+      else{
+        cardNumberRef.current.style.border = '1px solid red';
+        cardNumberRef.current.style.outline = '1px solid red';
+      }
     }
     if(holderName)
     {
@@ -42,7 +53,7 @@ export const Form = () => {
     {
       validateInput(cardcvvPatt,cvvRef,cvv);
     }
-  },[number,holderName,cvv,holderNamePatt,cardnumberPatt,cardcvvPatt])
+  },[number,cardType,holderName,cvv,holderNamePatt,cardnumberPatt,cardcvvPatt])
 
   //validateInput function using pattern
   const validateInput = (pattern,ref,input) =>{
@@ -68,8 +79,6 @@ export const Form = () => {
     let ccvValid = validateInput(cardcvvPatt,cvvRef,cvv);
     let holderNameValid = validateInput(holderNamePatt,holderNameRef,holderName);
 
-    let cardNumberValid = validateInput(cardnumberPatt,cardNumberRef,number);
-
     if(!ccvValid)
     {
       alert('Please enter 3 digital cvv numbers!');
@@ -83,7 +92,7 @@ export const Form = () => {
       holderNameRef.current.style.outline = '1px solid red';
       holderNameRef.current.focus();
     }
-    if(!cardNumberValid){
+    if(cardType === undefined){
       alert('Please enter 16 digital card numbers!');
       cardNumberRef.current.style.border = '1px solid red';
       cardNumberRef.current.style.outline = '1px solid red';
@@ -91,7 +100,7 @@ export const Form = () => {
     }
 
     //if all valid add cardInfo to firestore
-    if(ccvValid && cardNumberValid && holderNameValid)
+    if(ccvValid && cardType && holderNameValid)
     {
       db.collection('cardInfo').add({holderName,number,cvv,expireMonth,expireYear,cardNumber});
       dispatch(reset());
@@ -118,11 +127,19 @@ export const Form = () => {
     //set the style in case uses delete all the input
     if(!e.target.value) {
       cardNumberRef.current.style ='';
+      setCardType('');
     };
 
     //can only accept number input
     let value = e.target.value.replace(/[^\d]/,'');
+    console.log(e.target.value);
+    let card = creditCardType(e.target.value);
+    if(card){
+      setCardType(card);
+    }
+    else{
 
+    }
     //set cardNumber to show on Credit Card with space after every 4 digits
     let cardNumber = value.replace(/(\s)/g,'').replace(/(\d{4})/g,'$1 ').replace(/\s*$/,'')
     //save number and cardNumber to cardInfo
@@ -176,6 +193,7 @@ export const Form = () => {
         use CreditCard components with all props
         */}
       <CreditCard
+        cardType = {cardType}
         cardNumber= {cardNumber}
         holderName={holderName}
         cvv ={cvv}

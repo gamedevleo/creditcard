@@ -1,9 +1,36 @@
 import React from 'react';
 import './css/CreditCard.css';
 import chipImg from '../images/chip.png';
+import mastercard from '../images/MastercardLogo.png';
+import visa from '../images/VisaLogo.png';
+import UnionPay from '../images/UnionPayLogo.png';
+import amex from '../images/AmericanExpressLogo.png';
+import discover from '../images/DiscoverLogo.png';
+import emptyImg from '../images/Empty.png';
 
-export const CreditCard = ({cardNumber,faceFront,faceBack,holderName,cvv,expireMonth,expireYear}) => {
+export const CreditCard = ({cardNumber,faceFront,faceBack,holderName,cvv,expireMonth,expireYear,cardType}) => {
   //get last 2 digits of year
+  let img = emptyImg;
+  if(cardType === 'AMEX'){
+    img = amex;
+  }
+  else if(cardType === 'VISA')
+  {
+    img = visa;
+  }
+  else if(cardType === 'MASTERCARD')
+  {
+    img = mastercard;
+  }
+  else if(cardType === 'CHINA_UNION_PAY')
+  {
+    img = UnionPay;
+  }
+  else if(cardType === 'DISCOVER')
+  {
+    img = discover;
+  }
+
   expireYear = expireYear?.slice(-2);
   return (
     <div className='creditcard'>
@@ -16,6 +43,9 @@ export const CreditCard = ({cardNumber,faceFront,faceBack,holderName,cvv,expireM
               <span>Valid<br/>thru</span>
               <span>{expireMonth ? expireMonth: '0'+(new Date().getMonth()+1)}/{expireYear? expireYear:new Date().getFullYear().toString().slice(-2)}</span>
           </h5>
+          <div className = 'card_issuer'>
+            <img src={img} alt=""/>
+          </div>
           <h5 className="cardHolder">{holderName ? holderName.toUpperCase():'Leo Li'}</h5>
         </div>
         <div ref={faceBack} className="face back">
